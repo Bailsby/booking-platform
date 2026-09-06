@@ -6,6 +6,8 @@ dist
 .env*.local
 coverage
 .prisma
+/src/generated/prisma
+*.tsbuildinfo
 .vscode
 .DS_Store
 next-env.d.ts

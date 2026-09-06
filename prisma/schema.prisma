@@ -1,0 +1,11 @@
+// Models live here. Availability is stored as recurring rules plus exceptions,
+// never as pre-generated slots — see ROADMAP.md for why.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
