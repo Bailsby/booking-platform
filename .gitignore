@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+.env
+.env*.local
+coverage
+.prisma
+.vscode
+.DS_Store
+next-env.d.ts
+
+# Agent instructions and operational notes — local, not part of the project
+CLAUDE.md
+AGENTS.md
+DEPLOYMENT.md
