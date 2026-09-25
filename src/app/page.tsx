@@ -1,69 +1,95 @@
-import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { getAvailability } from "@/lib/availability/queries";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+// A read-only view of the availability engine against the seeded business.
+// The real booking flow (choose, pick, pay, confirm) replaces this in phase 2.
+
+const DAYS_SHOWN = 14;
+
+const formatPrice = (minor: number, currency: string) =>
+  new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(minor / 100);
+
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const business = await prisma.business.findFirst({
+    include: { services: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+  });
+
+  if (!business) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <p>
+          No business yet — run <code className="font-mono">npm run seed</code>.
+        </p>
       </main>
-    </div>
+    );
+  }
+
+  const { service: requested } = await searchParams;
+  const selected =
+    business.services.find((service) => service.id === requested) ?? business.services[0];
+  const days = await getAvailability(selected.id, DAYS_SHOWN);
+
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: business.timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const dayLabel = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+  return (
+    <main className="mx-auto w-full max-w-3xl px-4 py-10">
+      <h1 className="text-3xl font-semibold tracking-tight">{business.name}</h1>
+      <p className="mt-1 text-sm text-zinc-500">
+        Availability preview · times shown in {business.timeZone}
+      </p>
+
+      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Services">
+        {business.services.map((service) => (
+          <Link
+            key={service.id}
+            href={`/?service=${service.id}`}
+            aria-current={service.id === selected.id ? "page" : undefined}
+            className="rounded-full border border-zinc-300 px-4 py-2 text-sm hover:border-zinc-500 aria-[current=page]:border-teal-700 aria-[current=page]:bg-teal-700 aria-[current=page]:text-white dark:border-zinc-700"
+          >
+            {service.name}
+          </Link>
+        ))}
+      </nav>
+
+      <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+        {selected.description} {selected.durationMinutes} min ·{" "}
+        {formatPrice(selected.price, business.currency)}
+      </p>
+
+      <ol className="mt-8 space-y-6">
+        {days.map((day) => (
+          <li key={day.date}>
+            <h2 className="text-sm font-medium">
+              {dayLabel.format(new Date(`${day.date}T00:00:00Z`))}
+            </h2>
+            {day.slots.length === 0 ? (
+              <p className="mt-2 text-sm text-zinc-400">No availability</p>
+            ) : (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {day.slots.map((slot) => (
+                  <li
+                    key={slot.startsAt.toISOString()}
+                    className="rounded-md bg-zinc-100 px-2.5 py-1 font-mono text-sm tabular-nums dark:bg-zinc-800"
+                  >
+                    {time.format(slot.startsAt)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+    </main>
   );
 }
