@@ -139,6 +139,11 @@ model Booking {
   // e.g. the dog's name, breed and temperament.
   notes String?
 
+  // Bumped on every reschedule or cancellation. Calendar apps use it (as the
+  // .ics SEQUENCE) to recognise an update to an event they already hold.
+  sequence    Int       @default(0)
+  cancelledAt DateTime? @db.Timestamptz(3)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
