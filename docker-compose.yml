@@ -1,0 +1,27 @@
+# Local development database.
+#
+# Postgres 17 to match what Neon provisions. Published on 5433 rather than 5432
+# so it can run alongside other local Postgres containers without a port clash.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: booking-platform-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: booking_platform
+    ports:
+      - "5433:5432"
+    volumes:
+      - booking-platform-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Lets `docker compose up --wait` block until Postgres accepts connections,
+      # so a migration run straight afterwards doesn't fail on a cold container.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d booking_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  booking-platform-pgdata:

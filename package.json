@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
