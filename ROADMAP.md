@@ -99,13 +99,19 @@ larger product than the one described above.
   the value; syncing back means resolving conflicts between two systems that both believe
   they own the appointment.
 
+## Done
+
+1. **Availability engine** — the models above and slot derivation, with tests covering
+   both UK DST transitions and a US one.
+2. **Customer booking flow** — service, date, slot, details, confirm; confirmation,
+   reschedule and cancellation emails, each with an `.ics` that updates the same calendar
+   event; token-based cancel and reschedule. A database test suite runs simultaneous
+   requests for one slot and requires exactly one to succeed.
+
 ## Planned
 
 Roughly in order.
 
-1. **Availability engine** — the models above and slot derivation, with tests.
-2. **Customer booking flow** — service, date, slot, details, confirm; confirmation email
-   with an `.ics` attachment; token-based cancel and reschedule.
 3. **Payments** — Stripe Checkout, per-service payment rules, refunds within a
    configurable cancellation window.
 4. **Admin** — day/week/month calendar, manual booking entry for phone bookings, customer
