@@ -75,6 +75,10 @@ const main = async () => {
   const business = await prisma.business.create({
     data: {
       name: "Muddy Paws Grooming",
+      address: "Headingley, Leeds",
+      // Ofcom's range reserved for drama — guaranteed not to ring anyone.
+      phone: "0113 496 0123",
+      email: "hello@muddypaws.example",
       timeZone: TIME_ZONE,
       rules: { create: rules },
       services: {

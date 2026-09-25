@@ -18,6 +18,12 @@ model Business {
   timeZone String
   currency String @default("GBP")
 
+  // Shown to customers, and used as the reply-to and calendar organiser on
+  // booking emails so a reply reaches the business rather than the mail service.
+  address String?
+  phone   String?
+  email   String?
+
   // Granularity of offered start times, independent of service length.
   slotIntervalMinutes Int @default(15)
   // How soon, and how far ahead, a customer may book.
