@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
         {business && (
           <footer className="border-t border-line">
-            <div className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted">
+            <div className="mx-auto max-w-3xl px-4 py-6 text-center text-sm text-muted">
               {[business.name, business.address, business.email].filter(Boolean).join(" · ")}
             </div>
           </footer>
