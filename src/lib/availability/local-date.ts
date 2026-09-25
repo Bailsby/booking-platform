@@ -27,6 +27,17 @@ const toUtcMidnight = (year: number, month: number, day: number): Date =>
 
 const fromUtcMidnight = (date: Date): LocalDate => date.toISOString().slice(0, 10);
 
+/** For untrusted input such as a query string. */
+export const isLocalDate = (value: unknown): value is LocalDate => {
+  if (typeof value !== "string") return false;
+  try {
+    parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /** 0 = Sunday … 6 = Saturday. */
 export const dayOfWeek = (date: LocalDate): number => {
   const { year, month, day } = parse(date);

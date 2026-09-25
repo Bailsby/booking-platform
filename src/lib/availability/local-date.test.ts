@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, dayOfWeek, eachLocalDate, localDateOf, localToInstant } from "./local-date";
+import { addDays, dayOfWeek, eachLocalDate, isLocalDate, localDateOf, localToInstant } from "./local-date";
 
 describe("dayOfWeek", () => {
   it("numbers days from Sunday = 0", () => {
@@ -10,6 +10,15 @@ describe("dayOfWeek", () => {
   it("rejects malformed and impossible dates", () => {
     expect(() => dayOfWeek("2026-9-29")).toThrow(RangeError);
     expect(() => dayOfWeek("2026-02-30")).toThrow(RangeError);
+  });
+});
+
+describe("isLocalDate", () => {
+  it("accepts real dates and rejects everything else", () => {
+    expect(isLocalDate("2026-09-29")).toBe(true);
+    ["2026-02-30", "2026-9-29", "29/09/2026", "", undefined, ["2026-09-29"], 20260929].forEach((value) =>
+      expect(isLocalDate(value)).toBe(false),
+    );
   });
 });
 
