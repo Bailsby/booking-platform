@@ -28,7 +28,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const { service: requested } = await searchParams;
   const selected =
     business.services.find((service) => service.id === requested) ?? business.services[0];
-  const days = await getAvailability(selected.id, DAYS_SHOWN);
+  const days = await getAvailability(selected.id, { days: DAYS_SHOWN });
 
   const time = new Intl.DateTimeFormat("en-GB", {
     timeZone: business.timeZone,
