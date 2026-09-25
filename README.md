@@ -3,6 +3,8 @@
 **[Try the live demo →](https://dog-groomers.jake-bailey.dev)**. No sign-up. The salon
 is fictional, nothing you do sends an email, and the diary resets every night.
 
+![Choosing a time for a Full Groom: a fortnight of dates with fully booked days struck through, and the free morning and afternoon times for the selected Tuesday.](docs/booking-flow.webp)
+
 ## The problem
 
 A small salon takes bookings by phone, text and Facebook message, usually while it has a
