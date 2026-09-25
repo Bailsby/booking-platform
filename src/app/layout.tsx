@@ -31,7 +31,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col font-sans">
         <header className="border-b border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-            <Link href="/" className="text-lg font-semibold tracking-tight">
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight hover:text-brand">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-5 text-brand"
+              >
+                <path d="M3 10.5 12 3l9 7.5" />
+                <path d="M5 9v11a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9" />
+              </svg>
               {business?.name ?? "Book online"}
             </Link>
             {business?.phone && (

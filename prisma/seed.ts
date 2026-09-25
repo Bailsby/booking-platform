@@ -1,4 +1,4 @@
-// Demo data: a small dog grooming salon in Leeds with three weeks of history and
+// Demo data: a small dog grooming salon in Manchester with three weeks of history and
 // three weeks of upcoming bookings, all relative to today so the demo never
 // looks stale. Re-running replaces everything.
 
@@ -75,9 +75,8 @@ const main = async () => {
   const business = await prisma.business.create({
     data: {
       name: "Muddy Paws Grooming",
-      address: "Headingley, Leeds",
-      // Ofcom's range reserved for drama — guaranteed not to ring anyone.
-      phone: "0113 496 0123",
+      address: "FakeTown, Manchester",
+      phone: "0123 456 7890",
       email: "hello@muddypaws.example",
       timeZone: TIME_ZONE,
       rules: { create: rules },
