@@ -20,3 +20,17 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
 }
+
+/* Tailwind 4 dropped the pointer cursor from buttons. Restore it everywhere,
+   so no individual button can be missed, and signal disabled ones clearly. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
