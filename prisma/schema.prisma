@@ -9,3 +9,139 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Business {
+  id       String @id @default(cuid())
+  name     String
+  // IANA zone, e.g. "Europe/London". Rules are resolved in this zone, so a
+  // 09:00 opening stays 09:00 across a DST change.
+  timeZone String
+  currency String @default("GBP")
+
+  // Granularity of offered start times, independent of service length.
+  slotIntervalMinutes Int @default(15)
+  // How soon, and how far ahead, a customer may book.
+  minNoticeMinutes    Int @default(120)
+  maxAdvanceDays      Int @default(60)
+
+  services   Service[]
+  rules      AvailabilityRule[]
+  exceptions AvailabilityException[]
+  customers  Customer[]
+  bookings   Booking[]
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+}
+
+model Service {
+  id                  String   @id @default(cuid())
+  businessId          String
+  business            Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name                String
+  description         String?
+  durationMinutes     Int
+  // Time kept clear around the appointment for prep and clean-down. Buffers
+  // separate appointments from each other; they may run outside opening hours.
+  bufferBeforeMinutes Int      @default(0)
+  bufferAfterMinutes  Int      @default(0)
+  // Minor units (pence).
+  price               Int
+  active              Boolean  @default(true)
+  sortOrder           Int      @default(0)
+
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([businessId])
+}
+
+// A recurring weekly opening window, in the business's local wall-clock time.
+// Several rules on one weekday express a split day (e.g. a lunch break).
+model AvailabilityRule {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // 0 = Sunday … 6 = Saturday, matching Date#getDay.
+  dayOfWeek   Int
+  // Minutes after local midnight; end is exclusive.
+  startMinute Int
+  endMinute   Int
+
+  @@index([businessId, dayOfWeek])
+}
+
+enum ExceptionKind {
+  // Removes time: the whole day when no window is given, otherwise that window.
+  CLOSED
+  // Adds time outside the usual rules, e.g. an extra Sunday before Christmas.
+  OPEN
+}
+
+// A one-off change to the weekly pattern on a single local date.
+model AvailabilityException {
+  id          String        @id @default(cuid())
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // A calendar date in the business's zone, not an instant.
+  date        DateTime      @db.Date
+  kind        ExceptionKind
+  startMinute Int?
+  endMinute   Int?
+  reason      String?
+
+  @@index([businessId, date])
+}
+
+// Customers don't have accounts; this record exists so the admin can see a
+// customer's history across bookings.
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  email      String
+  phone      String
+
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([businessId, email])
+}
+
+enum BookingStatus {
+  // Slot held while the customer completes checkout.
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  businessId String
+  business   Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  serviceId  String
+  service    Service       @relation(fields: [serviceId], references: [id])
+  customerId String
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  status     BookingStatus @default(CONFIRMED)
+
+  // The appointment itself, as shown to the customer.
+  startsAt     DateTime @db.Timestamptz(3)
+  endsAt       DateTime @db.Timestamptz(3)
+  // The appointment plus the service's buffers at booking time. The
+  // no-overlap exclusion constraint (see the migration) is on this range, so
+  // later changes to a service's buffers don't reshuffle existing bookings.
+  blockedFrom  DateTime @db.Timestamptz(3)
+  blockedUntil DateTime @db.Timestamptz(3)
+
+  // e.g. the dog's name, breed and temperament.
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, blockedFrom])
+  @@index([customerId])
+}
