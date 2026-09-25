@@ -13,4 +13,7 @@ export const appUrl = (): string =>
 export const managePath = (bookingId: string): string =>
   `/bookings/${bookingId}?token=${manageToken(bookingId)}`;
 
-export const manageUrl = (bookingId: string): string => `${appUrl()}${managePath(bookingId)}`;
+export const reschedulePath = (bookingId: string): string =>
+  `/bookings/${bookingId}/reschedule?token=${manageToken(bookingId)}`;
+
+export const manageUrl =(bookingId: string): string => `${appUrl()}${managePath(bookingId)}`;
