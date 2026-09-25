@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { getBusiness } from "@/lib/business";
+import { isDemo } from "@/lib/demo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +30,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
+        {isDemo() && (
+          <div className="bg-ink px-4 py-2 text-center text-sm text-white/90">
+            Demo — this salon is fictional. Book anything you like: no emails are sent, and bookings
+            reset every night.{" "}
+            <a href="https://jake-bailey.dev" className="whitespace-nowrap font-medium text-white underline">
+              Built by Jake Bailey
+            </a>
+          </div>
+        )}
         <header className="border-b border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
             <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight hover:text-brand">

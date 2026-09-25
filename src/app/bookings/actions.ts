@@ -42,5 +42,7 @@ export async function rescheduleBookingAction(form: FormData) {
   }
 
   after(() => notifyCustomer("rescheduled", result.booking, result.previousStartsAt));
-  redirect(`${managePath(bookingId)}&status=rescheduled`);
+  // The old time is only used to word the demo's email preview.
+  const previous = encodeURIComponent(result.previousStartsAt.toISOString());
+  redirect(`${managePath(bookingId)}&status=rescheduled&previous=${previous}`);
 }

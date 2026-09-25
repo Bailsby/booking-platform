@@ -1,3 +1,5 @@
+import { isDemo } from "../demo";
+
 export type Email = {
   to: string;
   subject: string;
@@ -11,11 +13,18 @@ export type Email = {
 
 /**
  * Sends through Resend's HTTP API. Without credentials — local development —
- * the email is printed instead, so the whole flow works with no account.
+ * the email is printed instead, so the whole flow works with no account. In
+ * demo mode nothing is sent even if credentials are present.
  */
 export const sendEmail = async (email: Email): Promise<void> => {
   const apiKey = process.env.AUTH_RESEND_KEY;
   const from = process.env.AUTH_EMAIL_FROM;
+
+  if (isDemo()) {
+    // No address or content: on the demo these are whatever visitors typed.
+    console.info(`Email not sent (demo mode): ${email.subject.split(":")[0]}`);
+    return;
+  }
 
   if (!apiKey || !from) {
     console.info(

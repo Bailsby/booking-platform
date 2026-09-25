@@ -1,15 +1,38 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingSummary } from "@/components/booking-summary";
+import { EmailPreview } from "@/components/email-preview";
 import { reschedulePath } from "@/lib/app-url";
-import { isChangeable } from "@/lib/bookings/bookings";
-import { firstParam } from "@/lib/search-params";
+import { isChangeable, type FullBooking } from "@/lib/bookings/bookings";
+import { bookingEmailFor } from "@/lib/bookings/notify";
+import { isDemo } from "@/lib/demo";
+import { firstParam, instantParam } from "@/lib/search-params";
 import { cancelBookingAction } from "../actions";
 import { loadBookingFromLink } from "./load";
 
 export const metadata: Metadata = { title: "Your booking" };
 
-const banners: Record<string, { tone: "good" | "bad"; title: string; body?: string }> = {
+type Banner = { tone: "good" | "bad"; title: string; body?: string };
+
+// In demo mode nothing is emailed, so the copy points at the preview instead.
+const demoBodies: Record<string, string> = {
+  confirmed: "Your customer would now get a confirmation email with a calendar invite — it's shown below.",
+  rescheduled: "Your customer would now get an email with the new time — it's shown below.",
+  cancelled: "Your customer would now get an email confirming the cancellation — it's shown below.",
+};
+
+/** The email that the action just "sent", if it matches the booking's state. */
+const previewEmail = (status: string, booking: FullBooking, previousStartsAt: Date | null) => {
+  const live = booking.status === "CONFIRMED";
+  if (status === "confirmed" && live) return bookingEmailFor("confirmed", booking);
+  if (status === "rescheduled" && live) {
+    return bookingEmailFor("rescheduled", booking, previousStartsAt ?? undefined);
+  }
+  if (status === "cancelled" && !live) return bookingEmailFor("cancelled", booking);
+  return null;
+};
+
+const banners: Record<string, Banner> = {
   confirmed: {
     tone: "good",
     title: "You're booked in",
@@ -26,7 +49,12 @@ const banners: Record<string, { tone: "good" | "bad"; title: string; body?: stri
 
 export default async function ManageBooking({ params, searchParams }: PageProps<"/bookings/[id]">) {
   const { booking, token, query } = await loadBookingFromLink(params, searchParams);
-  const banner = banners[firstParam(query.status) ?? firstParam(query.error) ?? ""];
+  const status = firstParam(query.status) ?? firstParam(query.error) ?? "";
+  const banner: Banner | undefined =
+    banners[status] && isDemo() && demoBodies[status]
+      ? { ...banners[status], body: demoBodies[status] }
+      : banners[status];
+  const preview = isDemo() ? previewEmail(status, booking, instantParam(query.previous)) : null;
   const changeable = isChangeable(booking);
   const cancelled = booking.status === "CANCELLED";
 
@@ -85,6 +113,8 @@ export default async function ManageBooking({ params, searchParams }: PageProps<
           Book another appointment
         </Link>
       )}
+
+      {preview && <EmailPreview email={preview} />}
     </main>
   );
 }
