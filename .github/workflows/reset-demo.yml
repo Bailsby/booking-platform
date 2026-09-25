@@ -1,0 +1,30 @@
+name: Reset demo data
+
+# The seed is relative to the day it runs, so without this the demo's upcoming
+# bookings run out after three weeks. It also clears whatever visitors booked.
+on:
+  schedule:
+    - cron: "0 3 * * *" # 03:00 UTC, when nobody in the UK is booking a groom
+  workflow_dispatch:
+
+concurrency:
+  group: reset-demo
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Replaces everything in the demo database.
+      - run: npm run seed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
